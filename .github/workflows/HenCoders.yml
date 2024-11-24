@@ -1,0 +1,42 @@
+name: Linux Latest RDP
+
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9999
+
+    steps:
+    - name: Download Ngrok
+      run: |
+        curl -L https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip -o ngrok.zip
+        unzip ngrok.zip
+        rm ngrok.zip
+
+    - name: Download start.sh and loop.sh
+      run: |
+        curl -L https://raw.githubusercontent.com/HenCodersDeveloper/TestLinux/refs/heads/main/start.sh -o start.sh
+        curl -L https://raw.githubusercontent.com/HenCodersDeveloper/TestLinux/refs/heads/main/loop.sh -o loop.sh
+        chmod +x start.sh loop.sh
+
+    - name: Install dependencies for RDP
+      run: |
+        sudo apt update
+        sudo apt install -y xrdp
+        sudo systemctl enable xrdp
+        sudo systemctl start xrdp
+
+    - name: Connect to Ngrok
+      run: |
+        ./ngrok authtoken $NGROK_AUTH_TOKEN
+        nohup ./ngrok tcp 3389 &> ngrok.log &
+        sleep 10
+
+    - name: Start RDP session
+      run: |
+        ./start.sh
+
+    - name: Keep the process running
+      run: |
+        ./loop.sh
