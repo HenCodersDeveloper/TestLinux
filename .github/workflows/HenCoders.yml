@@ -23,7 +23,7 @@ jobs:
     - name: Install dependencies for RDP
       run: |
         sudo apt update
-        sudo apt install -y xrdp
+        sudo apt install -y xrdp jq
         sudo systemctl enable xrdp
         sudo systemctl start xrdp
 
@@ -32,9 +32,8 @@ jobs:
         ./ngrok authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
         nohup ./ngrok tcp 3389 &> ngrok.log &
         sleep 10
-        # Output the ngrok public IP and port
         echo "Ngrok Tunnel IP and Port:"
-        curl -s localhost:4040/api/tunnels | jq -r .tunnels[0].public_url
+        curl -s http://127.0.0.1:4040/api/tunnels | jq -r '.tunnels[0].public_url'
 
     - name: Start RDP session
       run: |
