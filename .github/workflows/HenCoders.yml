@@ -10,9 +10,10 @@ jobs:
     steps:
     - name: Download Ngrok
       run: |
-        curl -L https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip -o ngrok.zip
-        unzip ngrok.zip
-        rm ngrok.zip
+        curl -L https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz -o ngrok.tgz
+        tar -xvzf ngrok.tgz
+        chmod +x ngrok
+        rm ngrok.tgz
 
     - name: Download start.sh and loop.sh
       run: |
@@ -23,7 +24,7 @@ jobs:
     - name: Install dependencies for RDP
       run: |
         sudo apt update
-        sudo apt install -y xrdp jq curl
+        sudo apt install -y xrdp
         sudo systemctl enable xrdp
         sudo systemctl start xrdp
 
@@ -32,15 +33,10 @@ jobs:
         ./ngrok authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
         nohup ./ngrok tcp 3389 &> ngrok.log &
         sleep 10
-        echo "Ngrok Logs:"
-        cat ngrok.log
-        echo "Fetching Ngrok Tunnel Information..."
-        curl -s http://127.0.0.1:4040/api/tunnels | jq -r '.tunnels[0].public_url'
+        curl -s http://127.0.0.1:4040/api/tunnels | grep -Eo 'tcp://[0-9a-z\.:]+' || echo "Ngrok tunnel information unavailable."
 
     - name: Start RDP session
-      run: |
-        ./start.sh
+      run: ./start.sh
 
     - name: Keep the process running
-      run: |
-        ./loop.sh
+      run: ./loop.sh
